@@ -10,6 +10,7 @@ public class HelloController {
     @GetMapping("/hello") // HTTP Method가 GET으로 되어있고, url이 hello인것 만 받겠다.
     public String hello(String name) { // controller method에 parameter로 지정해둠
         // -> /hello?name=민규 처럼 들어오는 것을 parameter로 받는다는 의미
+        // query string으로 파라미터를 준 것이다
         return "hello " + name;
     }
 }
