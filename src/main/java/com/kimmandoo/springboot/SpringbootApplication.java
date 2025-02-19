@@ -12,6 +12,9 @@ import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactor
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
 import java.io.IOException;
 
@@ -38,10 +41,14 @@ public class SpringbootApplication {
 //                        super.service(req, resp);
                         // 웹 응답의 3 요소, Status Line, Headers, Message Body
                         // -> 이걸 코드로 만들어서 반환해주면 된다.
-                        resp.setStatus(200); // 응답코드 설정
-                        resp.setHeader("Content-Type", "text/plain"); // 헤더
+//                        resp.setStatus(200); // 응답코드 설정
+                        resp.setStatus(HttpStatus.OK.value()); // 응답코드 설정
+//                        resp.setHeader("Content-Type", "text/plain"); // 헤더
+                        resp.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE); // 헤더 <- 주어진 enum을 잘 쓰자.
                         // body는 양이많다.
-                        resp.getWriter().println("Hello Servlet!"); // 문자열응답만드는데 굉장히 편리한 PrintWriter클래스
+
+                        String name = req.getParameter("name"); // query string 에서 받아오기
+                        resp.getWriter().println("Hello Servlet! Nice to meet you "+name); // 문자열응답만드는데 굉장히 편리한 PrintWriter클래스
                     }
 
 
