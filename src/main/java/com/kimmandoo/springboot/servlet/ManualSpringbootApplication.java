@@ -1,5 +1,6 @@
 package com.kimmandoo.springboot.servlet;
 
+import com.kimmandoo.springboot.HelloController;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -9,19 +10,34 @@ import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactor
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
 import java.io.IOException;
 
 //@SpringBootApplication
-
+@Configuration // 이 클래스가 Bean 오브젝트를 반환하는 팩토리 메서드를 가졌다는 것을 명시하기 위해 Configuration 애노테이션을 붙여줘야됨
 public class ManualSpringbootApplication { // springboot 없이 webcontainer 띄우고 처리하는 방법 알아보기
+
+    // 팩토리 메서드 작성 시작
+    // Bean 등록방법 #1
+    @Bean
+    public HelloManualController helloManualController(HelloService helloService){ // 스프링컨테이너한테 의존 파라미터를 명시해줌
+        return new HelloManualController(helloService); // service를 생성자에 주입해줘야한다. -> 어차피 팩토리 메서드는 스프링 컨테이너가 호출을 할거다.
+    }
+
+    @Bean // bean 오브젝트를 생성하는 팩토리 메서드가 된다
+    public HelloService helloService(){
+        return new SimpleHelloService();
+    }
 
     public static void main(String[] args) {
         // 이것만해도 ServletContainer(tomcat)이 뜬다.
@@ -30,7 +46,8 @@ public class ManualSpringbootApplication { // springboot 없이 webcontainer 띄
         // 내부 동작에 접근할 수 있도록 ApplicationContext가 필요하다.
 //        GenericApplicationContext genericApplicationContext = new GenericApplicationContext(); // SpringContainer에서는 이게 자동으로 돌아간다
 //        GenericWebApplicationContext genericApplicationContext = new GenericWebApplicationContext(); // DispatcherServlet을 위한 context
-        GenericWebApplicationContext genericApplicationContext = new GenericWebApplicationContext() { // 익명 클래스 써서 초기화 하기
+//        GenericWebApplicationContext genericApplicationContext = new GenericWebApplicationContext() { // 익명 클래스 써서 초기화 하기
+        AnnotationConfigWebApplicationContext genericApplicationContext = new AnnotationConfigWebApplicationContext() { // 구성정보를 자바로 바꿨기 때문에 Generic을 못쓴다!
             @Override
             protected void onRefresh() {
                 super.onRefresh();
@@ -44,10 +61,15 @@ public class ManualSpringbootApplication { // springboot 없이 webcontainer 띄
                 webServer.start();
             }
         };
-        genericApplicationContext.registerBean(HelloManualController.class); // bean 등록하기
-        genericApplicationContext.registerBean(SimpleHelloService.class); // Bean에 등록하면 의존관계를 runtime에 맵핑해준다.
+
+        // bean등록과정을 factory method로 이제 처리할건데, factory method는 오브젝트들을 생성하는 메서드
+//        genericApplicationContext.registerBean(HelloManualController.class); // bean 등록하기 <- 자바 구성정보로 이미 처리했다.
+//        genericApplicationContext.registerBean(SimpleHelloService.class); // Bean에 등록하면 의존관계를 runtime에 맵핑해준다.
 // 이렇게 service를 등록해두면, controller에서 생성자 주입까지 해준다.
 // 스프링 컨테이너가 bean 구성 정보를 갖고있게 됨
+        genericApplicationContext.register(ManualSpringbootApplication.class); // 자바코드 구성정보를 가진 클래스를 등록해줘야 정상작동함(Bean을 가져올수 있다.)
+        // Configuration이 붙은 클래스가 AnnotationConfig을 이용하는 클래스에 처음 등록된다는 점이 가장 중요하다.
+        // bean factory 메서드를 가지는 거 이상으로 중요한 정보를 넣을 수 있는 클래스가 되기 때문.
         genericApplicationContext.refresh(); // bean 오브젝트 생성해주는 초기화
 // 이게 스프링컨테이너가 초기화되는시점이다.!
 
