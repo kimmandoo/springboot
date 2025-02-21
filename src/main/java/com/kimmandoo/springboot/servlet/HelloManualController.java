@@ -15,7 +15,7 @@ public class HelloManualController {
 
     private final HelloService helloService; // final로 한번 할당되면 재할당 안되게 막고, private로 외부에서 접근하지 못하게 막는다.
 
-    private HelloManualController(HelloService helloService) { // auto-wired 문제
+    public HelloManualController(HelloService helloService) { // auto-wired 문제,. private으로 해두면 spring이 자동 빈 생성을 안해줌
         this.helloService = helloService;
     }
 
